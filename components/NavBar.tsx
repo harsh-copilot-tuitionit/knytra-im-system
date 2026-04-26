@@ -44,6 +44,12 @@ export function NavBar() {
         </nav>
 
         <div className="flex items-center gap-3">
+          <Link
+            href="/contact"
+            className="hidden rounded-full border border-slate-700 bg-slate-900 px-4 py-2 text-sm text-slate-200 transition hover:border-brand-400 hover:text-brand-300 md:inline-flex"
+          >
+            Support
+          </Link>
           {user ? (
             <div className="hidden items-center gap-3 md:flex">
               <span className="text-sm text-slate-300">{user.displayName ?? user.email}</span>
