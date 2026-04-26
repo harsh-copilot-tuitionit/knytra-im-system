@@ -135,15 +135,15 @@ export default function HomePage() {
                   </div>
                   <div className="mt-8 space-y-4 text-slate-300">
                     <div>
-                      <p className="text-sm uppercase tracking-[0.2em] text-slate-500">Status</p>
+                      <p className="text-sm uppercase tracking-[0.2em] text-brand-300">Status (Database)</p>
                       <p className="mt-1 text-lg font-semibold text-white">{result.status}</p>
                     </div>
                     <div>
-                      <p className="text-sm uppercase tracking-[0.2em] text-slate-500">Stage</p>
+                      <p className="text-sm uppercase tracking-[0.2em] text-brand-300">Stage (Workflow)</p>
                       <p className="mt-1 text-lg font-semibold text-white">{result.stage}</p>
                     </div>
                     <div>
-                      <p className="text-sm uppercase tracking-[0.2em] text-slate-500">Owner</p>
+                      <p className="text-sm uppercase tracking-[0.2em] text-brand-300">Owner</p>
                       <p className="mt-1 text-lg font-semibold text-white">{result.owner}</p>
                     </div>
                   </div>

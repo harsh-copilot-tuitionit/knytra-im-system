@@ -34,14 +34,14 @@ interface ProfileData {
   lastAction: string;
 }
 
+// Only show allowed actions for owner
 const actionButtons = [
-  { label: 'Start Research', stage: 'Researching' },
-  { label: 'Send Message', stage: 'Outreach Sent' },
-  { label: 'Mark Awaiting Reply', stage: 'Awaiting Reply' },
-  { label: 'Move to Negotiating', stage: 'Negotiating' },
-  { label: 'Onboard', stage: 'Onboarded' },
-  { label: 'Reject', stage: 'Rejected' },
-  { label: 'Mark Inactive', stage: 'Inactive' },
+  { label: 'Start Research', stage: 'Researching', key: 'start-research' },
+  { label: 'Send Message', stage: 'Awaiting Reply', key: 'send-message' },
+  { label: 'Move to Negotiating', stage: 'Negotiating', key: 'negotiating' },
+  { label: 'Onboard', stage: 'Onboarded', key: 'onboarded' },
+  { label: 'Reject', stage: 'Rejected', key: 'rejected' },
+  { label: 'Mark Inactive', stage: 'Inactive', key: 'inactive' },
 ];
 
 export default function ProfilePage() {
@@ -97,32 +97,33 @@ export default function ProfilePage() {
 
   const isMissing = !profile && !loading;
 
+
+  // Only owner can change stage
+  const isOwner = user && profile && (user.uid === profile.ownerId || user.email === profile.ownerEmail);
+
   const handleAction = async (stage: string) => {
-    if (!documentId) return;
+    if (!documentId || !isOwner) return;
     const db = getFirestore();
     const ref = doc(db, 'influencers', documentId);
     await updateDoc(ref, {
       stage,
       lastAction: `${stage} by ${user?.displayName ?? 'Intern'}`,
+      updatedAt: serverTimestamp(),
     });
     setMessage(`Profile updated to ${stage}.`);
   };
 
+  // Only owner can mark research complete
   const handleResearchComplete = async () => {
-    if (!documentId || !profile) return;
+    if (!documentId || !profile || !isOwner) return;
     const db = getFirestore();
     const ref = doc(db, 'influencers', documentId);
-    const updates: Record<string, any> = {
+    await updateDoc(ref, {
       researchStatus: 'Completed',
       researchCompletedAt: serverTimestamp(),
       lastAction: `Research completed by ${user?.displayName ?? 'Intern'}`,
-    };
-
-    if (profile.stage === 'Found') {
-      updates.stage = 'Researching';
-    }
-
-    await updateDoc(ref, updates);
+      updatedAt: serverTimestamp(),
+    });
     setMessage('Research marked complete.');
   };
 
@@ -164,9 +165,9 @@ export default function ProfilePage() {
               <p className="mt-3 text-slate-300">Track research, outreach, and status from a single profile screen.</p>
             </div>
             <div className="rounded-3xl bg-slate-950/70 px-5 py-4 text-sm text-slate-200">
-              <p>Status: <span className="font-semibold text-white">{profile.status}</span></p>
-              <p className="mt-2">Stage: <span className="font-semibold text-white">{profile.stage}</span></p>
-              <p className="mt-2">Active status: <span className="font-semibold text-white">{profile.activeStatus}</span></p>
+              <p><span className="font-semibold text-brand-300">Status (Database):</span> <span className="font-semibold text-white">{profile.status}</span></p>
+              <p className="mt-2"><span className="font-semibold text-brand-300">Stage (Workflow):</span> <span className="font-semibold text-white">{profile.stage}</span></p>
+              <p className="mt-2"><span className="font-semibold text-brand-300">Activity (Instagram):</span> <span className="font-semibold text-white">{profile.activeStatus}</span></p>
               <p className="mt-2">Research due: <span className="font-semibold text-white">{profile.researchDueAt ?? 'Not set'}</span></p>
               <p className="mt-2">Research status: <span className="font-semibold text-white">{profile.researchStatus}</span></p>
             </div>
@@ -268,23 +269,61 @@ export default function ProfilePage() {
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <p className="text-slate-300">Welcome, {user?.displayName ?? 'Intern'}! Use this profile to move {profile.fullName} through research, outreach, and negotiation.</p>
             <div className="grid gap-3 sm:grid-cols-4">
-              {actionButtons.map((item) => (
-                <button
-                  key={item.label}
-                  type="button"
-                  onClick={() => handleAction(item.stage)}
-                  className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-500"
-                >
-                  {item.label}
-                </button>
-              ))}
-              <button
-                type="button"
-                onClick={handleResearchComplete}
-                className="rounded-full bg-brand-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-400"
-              >
-                Mark Research Complete
-              </button>
+              {isOwner ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => handleAction('Researching')}
+                    className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-500"
+                  >
+                    Start Research
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleAction('Awaiting Reply')}
+                    className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-500"
+                  >
+                    Send Message
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleAction('Negotiating')}
+                    className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-500"
+                  >
+                    Move to Negotiating
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleAction('Onboarded')}
+                    className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-500"
+                  >
+                    Onboard
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleAction('Rejected')}
+                    className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-500"
+                  >
+                    Reject
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleAction('Inactive')}
+                    className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-500"
+                  >
+                    Mark Inactive
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleResearchComplete}
+                    className="rounded-full bg-brand-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-400"
+                  >
+                    Mark Research Complete
+                  </button>
+                </>
+              ) : (
+                <span className="text-slate-400">Only the owner can update workflow or research status.</span>
+              )}
             </div>
           </div>
           <p className="mt-4 text-sm text-slate-400">{message}</p>

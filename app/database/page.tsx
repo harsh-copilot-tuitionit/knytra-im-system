@@ -191,9 +191,9 @@ export default function DatabasePage() {
                     <p className="font-semibold text-white">@{item.username}</p>
                     <p className="text-xs text-slate-400">{item.fullName}</p>
                   </div>
-                  <span className="text-slate-300">{item.status}</span>
-                  <span className="text-slate-300">{item.stage}</span>
-                  <span className="text-slate-300">{item.owner}</span>
+                  <span className="text-slate-300">Status: {item.status}</span>
+                  <span className="text-slate-300">Stage: {item.stage}</span>
+                  <span className="text-slate-300">Owner: {item.owner}</span>
                   <span className="text-slate-300">{item.niche}</span>
                   <span className="text-slate-300">{item.followers.toLocaleString()}K</span>
                   <div className="flex justify-end">

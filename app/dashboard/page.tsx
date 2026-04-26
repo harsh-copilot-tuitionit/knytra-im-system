@@ -161,10 +161,10 @@ export default function DashboardPage() {
                     <p className="text-lg font-semibold text-white">@{item.username}</p>
                     <p className="text-sm text-slate-400">{item.fullName} · {item.audience}</p>
                   </div>
-                  <span className="rounded-full bg-brand-500/15 px-3 py-1 text-xs uppercase tracking-[0.24em] text-brand-200">{item.stage}</span>
+                  <span className="rounded-full bg-brand-500/15 px-3 py-1 text-xs uppercase tracking-[0.24em] text-brand-200">Stage: {item.stage}</span>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2 text-sm text-slate-400">
-                  <span>{item.status}</span>
+                  <span>Status: {item.status}</span>
                   <span>Owner: {item.owner}</span>
                 </div>
               </div>

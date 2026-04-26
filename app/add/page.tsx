@@ -6,7 +6,8 @@ import { getFirestore } from '../../lib/firebase';
 import { useAuth } from '../../components/AuthProvider';
 import Link from 'next/link';
 
-const activeStatusOptions = ['Active', 'Inactive', 'Unknown'];
+// Instagram activity options
+const instagramActivityOptions = ['Active', 'Low Activity', 'Inactive', 'Unknown'];
 const priorities = ['High', 'Medium', 'Low'];
 const contacts = ['DM', 'Email', 'Form'];
 
@@ -14,7 +15,8 @@ export default function AddPage() {
   const { user, loading } = useAuth();
   const [username, setUsername] = useState('');
   const [fullName, setFullName] = useState('');
-  const [activeStatus, setActiveStatus] = useState('Active');
+  // Renamed for clarity
+  const [instagramActivity, setInstagramActivity] = useState('Active');
   const [location, setLocation] = useState('');
   const [niche, setNiche] = useState('');
   const [brandFit, setBrandFit] = useState(4);
@@ -64,7 +66,7 @@ export default function AddPage() {
         fullName: fullName.trim(),
         status: 'In our Database',
         stage: 'Found',
-        activeStatus,
+        activeStatus: instagramActivity,
         location: location.trim(),
         niche: niche.trim(),
         brandFit,
@@ -153,13 +155,13 @@ export default function AddPage() {
 
             <div className="grid gap-4 lg:grid-cols-3">
               <label className="space-y-2 text-sm text-slate-300">
-                Active status
+                Activity (Instagram)
                 <select
-                  value={activeStatus}
-                  onChange={(event) => setActiveStatus(event.target.value)}
+                  value={instagramActivity}
+                  onChange={(event) => setInstagramActivity(event.target.value)}
                   className="w-full rounded-3xl border border-slate-700 bg-slate-900 px-4 py-3 text-slate-100 outline-none"
                 >
-                  {activeStatusOptions.map((item) => (
+                  {instagramActivityOptions.map((item) => (
                     <option key={item}>{item}</option>
                   ))}
                 </select>
@@ -272,7 +274,7 @@ export default function AddPage() {
                       <p className="text-base text-slate-400">{summary}</p>
                       <p className="mt-2 text-sm text-slate-300">Status: In our Database</p>
                       <p className="mt-1 text-sm text-slate-300">Stage: Found</p>
-                      <p className="mt-1 text-sm text-slate-300">Active status: {activeStatus}</p>
+                      <p className="mt-1 text-sm text-slate-300">Activity (Instagram): {instagramActivity}</p>
                     </div>
                     <span className="rounded-full bg-brand-500/15 px-4 py-2 text-xs uppercase tracking-[0.24em] text-brand-200">
                       Found
