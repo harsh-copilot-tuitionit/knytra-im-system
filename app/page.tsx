@@ -51,9 +51,9 @@ export default function HomePage() {
         setResult({
           username: normalizedSearch,
           fullName: docData.fullName ?? normalizedSearch,
-          status: docData.status ?? 'In Database',
-          stage: docData.stage ?? 'Researching',
-          owner: docData.owner ?? 'Unassigned',
+          status: docData.status ?? 'In our Database',
+          stage: docData.stage ?? 'Found',
+          owner: docData.owner ?? 'No owner assigned',
           followers: docData.followers ?? 0,
           engagementRate: docData.engagementRate ?? 0,
           location: docData.location ?? 'Unknown',
@@ -65,7 +65,7 @@ export default function HomePage() {
         setResult({
           username: normalizedSearch,
           status: 'Not in Database',
-          stage: 'New discovery',
+          stage: 'Not started',
           owner: 'No owner assigned',
           followers: 18300,
           engagementRate: 4.9,

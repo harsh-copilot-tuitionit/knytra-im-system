@@ -17,8 +17,8 @@ interface InfluencerRow {
   engagementRate: number;
 }
 
-const statusOptions = ['All', 'In Database', 'Not in Database'];
-const stageOptions = ['All', 'Found', 'Researching', 'Outreach Sent', 'Interested', 'Onboarded', 'Rejected'];
+const statusOptions = ['All', 'In our Database', 'Not in Database'];
+const stageOptions = ['All', 'Found', 'Researching', 'Outreach Sent', 'Awaiting Reply', 'Negotiating', 'Onboarded', 'Rejected', 'Inactive'];
 const ownerOptions = ['All', 'Intern Ava', 'Intern Ben', 'Intern Chloe', 'Intern David'];
 
 export default function DatabasePage() {
@@ -41,9 +41,9 @@ export default function DatabasePage() {
             id: doc.id,
             username: data.username ?? 'unknown',
             fullName: data.fullName ?? 'Unknown',
-            status: data.status ?? 'In Database',
-            stage: data.stage ?? 'Researching',
-            owner: data.owner ?? 'Unassigned',
+            status: data.status ?? 'In our Database',
+            stage: data.stage ?? 'Found',
+            owner: data.ownerName ?? data.owner ?? 'Unassigned',
             niche: data.niche ?? 'General',
             followers: data.followers ?? 0,
             engagementRate: data.engagementRate ?? 0,

@@ -33,10 +33,10 @@ export default function DashboardPage() {
             id: doc.id,
             username: data.username ?? 'unknown',
             fullName: data.fullName ?? 'Unknown',
-            status: data.status ?? 'In Database',
-            stage: data.stage ?? 'Researching',
+            status: data.status ?? 'In our Database',
+            stage: data.stage ?? 'Found',
             audience: `${data.niche ?? 'General'} audience`,
-            owner: data.owner ?? 'Unassigned',
+            owner: data.ownerName ?? data.owner ?? 'Unassigned',
           };
         })
       );
@@ -74,7 +74,7 @@ export default function DashboardPage() {
     influencers.forEach((item) => {
       if (item.stage === 'Researching') summary.researchPending += 1;
       if (item.stage === 'Awaiting Reply') summary.repliesPending += 1;
-      if (item.stage === 'Negotiation') summary.negotiationsActive += 1;
+      if (item.stage === 'Negotiating') summary.negotiationsActive += 1;
       if (item.stage === 'Onboarded') summary.onboardedCount += 1;
       if (item.stage === 'Rejected') summary.rejectedCount += 1;
     });

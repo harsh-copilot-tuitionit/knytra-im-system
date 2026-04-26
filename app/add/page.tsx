@@ -1,12 +1,12 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { addDoc, collection, getDocs, onSnapshot, query, serverTimestamp, where } from 'firebase/firestore';
+import { addDoc, collection, getDocs, query, serverTimestamp, Timestamp, where } from 'firebase/firestore';
 import { getFirestore } from '../../lib/firebase';
 import { useAuth } from '../../components/AuthProvider';
 import Link from 'next/link';
 
-const stages = ['Researching', 'Outreach Sent', 'Interested', 'Onboarded', 'Rejected'];
+const activeStatusOptions = ['Active', 'Inactive', 'Unknown'];
 const priorities = ['High', 'Medium', 'Low'];
 const contacts = ['DM', 'Email', 'Form'];
 
@@ -14,8 +14,7 @@ export default function AddPage() {
   const { user, loading } = useAuth();
   const [username, setUsername] = useState('');
   const [fullName, setFullName] = useState('');
-  const [status, setStatus] = useState('Active');
-  const [stage, setStage] = useState('Researching');
+  const [activeStatus, setActiveStatus] = useState('Active');
   const [location, setLocation] = useState('');
   const [niche, setNiche] = useState('');
   const [brandFit, setBrandFit] = useState(4);
@@ -63,8 +62,9 @@ export default function AddPage() {
       await addDoc(collection(db, 'influencers'), {
         username: username.trim().toLowerCase(),
         fullName: fullName.trim(),
-        status,
-        stage,
+        status: 'In our Database',
+        stage: 'Found',
+        activeStatus,
         location: location.trim(),
         niche: niche.trim(),
         brandFit,
@@ -73,7 +73,13 @@ export default function AddPage() {
         priority,
         preferredContact,
         outreachNotes: outreachNotes.trim(),
-        owner: user?.displayName ?? user?.email ?? 'Intern',
+        ownerId: user?.uid ?? '',
+        ownerName: user?.displayName ?? user?.email ?? 'Intern',
+        ownerEmail: user?.email ?? '',
+        assignedAt: serverTimestamp(),
+        researchDueAt: Timestamp.fromDate(new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)),
+        researchStatus: 'Pending',
+        researchCompletedAt: null,
         followers: 0,
         engagementRate: 0,
         lastMessage: outreachNotes.trim(),
@@ -147,24 +153,13 @@ export default function AddPage() {
 
             <div className="grid gap-4 lg:grid-cols-3">
               <label className="space-y-2 text-sm text-slate-300">
-                Status
+                Active status
                 <select
-                  value={status}
-                  onChange={(event) => setStatus(event.target.value)}
+                  value={activeStatus}
+                  onChange={(event) => setActiveStatus(event.target.value)}
                   className="w-full rounded-3xl border border-slate-700 bg-slate-900 px-4 py-3 text-slate-100 outline-none"
                 >
-                  <option>Active</option>
-                  <option>Inactive</option>
-                </select>
-              </label>
-              <label className="space-y-2 text-sm text-slate-300">
-                Stage
-                <select
-                  value={stage}
-                  onChange={(event) => setStage(event.target.value)}
-                  className="w-full rounded-3xl border border-slate-700 bg-slate-900 px-4 py-3 text-slate-100 outline-none"
-                >
-                  {stages.map((item) => (
+                  {activeStatusOptions.map((item) => (
                     <option key={item}>{item}</option>
                   ))}
                 </select>
@@ -178,6 +173,7 @@ export default function AddPage() {
                   className="w-full rounded-3xl border border-slate-700 bg-slate-900 px-4 py-3 text-slate-100 outline-none transition focus:border-brand-400"
                 />
               </label>
+              <div className="hidden lg:block" />
             </div>
 
             <div className="grid gap-4 lg:grid-cols-2">
@@ -274,10 +270,12 @@ export default function AddPage() {
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <p className="text-base text-slate-400">{summary}</p>
-                      <p className="mt-2 text-sm text-slate-300">Status: {status}</p>
+                      <p className="mt-2 text-sm text-slate-300">Status: In our Database</p>
+                      <p className="mt-1 text-sm text-slate-300">Stage: Found</p>
+                      <p className="mt-1 text-sm text-slate-300">Active status: {activeStatus}</p>
                     </div>
                     <span className="rounded-full bg-brand-500/15 px-4 py-2 text-xs uppercase tracking-[0.24em] text-brand-200">
-                      {stage}
+                      Found
                     </span>
                   </div>
                   <div className="mt-6 grid gap-4 sm:grid-cols-2">

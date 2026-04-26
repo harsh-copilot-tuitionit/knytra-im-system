@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { collection, doc, onSnapshot, query, updateDoc, where } from 'firebase/firestore';
+import { collection, doc, onSnapshot, query, serverTimestamp, updateDoc, where } from 'firebase/firestore';
 import { getFirestore } from '../../../lib/firebase';
 import { useAuth } from '../../../components/AuthProvider';
 
@@ -12,7 +12,10 @@ interface ProfileData {
   fullName: string;
   status: string;
   stage: string;
+  activeStatus: string;
   owner: string;
+  ownerId?: string;
+  ownerEmail?: string;
   niche: string;
   followers: number;
   engagementRate: number;
@@ -24,13 +27,18 @@ interface ProfileData {
   preferredContact: string;
   outreachNotes: string;
   researchNotes: string;
+  researchDueAt?: string;
+  researchStatus: string;
+  researchCompletedAt?: string | null;
   lastMessage: string;
   lastAction: string;
 }
 
 const actionButtons = [
+  { label: 'Start Research', stage: 'Researching' },
   { label: 'Send Message', stage: 'Outreach Sent' },
-  { label: 'Move to Negotiation', stage: 'Negotiation' },
+  { label: 'Mark Awaiting Reply', stage: 'Awaiting Reply' },
+  { label: 'Move to Negotiating', stage: 'Negotiating' },
   { label: 'Onboard', stage: 'Onboarded' },
   { label: 'Reject', stage: 'Rejected' },
   { label: 'Mark Inactive', stage: 'Inactive' },
@@ -56,9 +64,12 @@ export default function ProfilePage() {
         setProfile({
           username: data.username ?? username,
           fullName: data.fullName ?? 'Unknown',
-          status: data.status ?? 'In Database',
-          stage: data.stage ?? 'Researching',
-          owner: data.owner ?? 'Unassigned',
+          status: data.status ?? 'In our Database',
+          stage: data.stage ?? 'Found',
+          activeStatus: data.activeStatus ?? 'Unknown',
+          owner: data.ownerName ?? data.owner ?? 'No owner assigned',
+          ownerId: data.ownerId ?? '',
+          ownerEmail: data.ownerEmail ?? '',
           niche: data.niche ?? 'General',
           followers: data.followers ?? 0,
           engagementRate: data.engagementRate ?? 0,
@@ -70,6 +81,9 @@ export default function ProfilePage() {
           preferredContact: data.preferredContact ?? 'DM',
           outreachNotes: data.outreachNotes ?? '',
           researchNotes: data.researchNotes ?? '',
+          researchDueAt: data.researchDueAt ? new Date(data.researchDueAt.seconds * 1000).toLocaleDateString() : 'Not set',
+          researchStatus: data.researchStatus ?? 'Pending',
+          researchCompletedAt: data.researchCompletedAt ? new Date(data.researchCompletedAt.seconds * 1000).toLocaleString() : null,
           lastMessage: data.lastMessage ?? '',
           lastAction: data.lastAction ?? '',
         });
@@ -89,10 +103,27 @@ export default function ProfilePage() {
     const ref = doc(db, 'influencers', documentId);
     await updateDoc(ref, {
       stage,
-      status: stage === 'Inactive' ? 'Inactive' : 'In Database',
       lastAction: `${stage} by ${user?.displayName ?? 'Intern'}`,
     });
     setMessage(`Profile updated to ${stage}.`);
+  };
+
+  const handleResearchComplete = async () => {
+    if (!documentId || !profile) return;
+    const db = getFirestore();
+    const ref = doc(db, 'influencers', documentId);
+    const updates: Record<string, any> = {
+      researchStatus: 'Completed',
+      researchCompletedAt: serverTimestamp(),
+      lastAction: `Research completed by ${user?.displayName ?? 'Intern'}`,
+    };
+
+    if (profile.stage === 'Found') {
+      updates.stage = 'Researching';
+    }
+
+    await updateDoc(ref, updates);
+    setMessage('Research marked complete.');
   };
 
   const checklist = useMemo(() => [
@@ -135,6 +166,9 @@ export default function ProfilePage() {
             <div className="rounded-3xl bg-slate-950/70 px-5 py-4 text-sm text-slate-200">
               <p>Status: <span className="font-semibold text-white">{profile.status}</span></p>
               <p className="mt-2">Stage: <span className="font-semibold text-white">{profile.stage}</span></p>
+              <p className="mt-2">Active status: <span className="font-semibold text-white">{profile.activeStatus}</span></p>
+              <p className="mt-2">Research due: <span className="font-semibold text-white">{profile.researchDueAt ?? 'Not set'}</span></p>
+              <p className="mt-2">Research status: <span className="font-semibold text-white">{profile.researchStatus}</span></p>
             </div>
           </div>
         </section>
@@ -233,7 +267,7 @@ export default function ProfilePage() {
         <section className="rounded-[2rem] border border-slate-800 bg-slate-900/80 p-8 shadow-glow">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <p className="text-slate-300">Welcome, {user?.displayName ?? 'Intern'}! Use this profile to move {profile.fullName} through research, outreach, and negotiation.</p>
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-4">
               {actionButtons.map((item) => (
                 <button
                   key={item.label}
@@ -244,6 +278,13 @@ export default function ProfilePage() {
                   {item.label}
                 </button>
               ))}
+              <button
+                type="button"
+                onClick={handleResearchComplete}
+                className="rounded-full bg-brand-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-400"
+              >
+                Mark Research Complete
+              </button>
             </div>
           </div>
           <p className="mt-4 text-sm text-slate-400">{message}</p>
