@@ -1,121 +1,247 @@
+﻿'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { getFirestore } from '../lib/firebase';
+import { useAuth } from '../components/AuthProvider';
 
-const stats = [
-  { label: 'Research pending', value: '5 profiles' },
-  { label: 'Onboarded', value: '10 influencers' },
-  { label: 'Replies pending', value: '3 DMs' },
-];
-
-const features = [
-  {
-    label: 'Research',
-    title: 'Centralize influencer discovery.',
-    description: 'Search profiles, capture niche fit, and assign new entries to interns with a structured data flow.',
-  },
-  {
-    label: 'Outreach',
-    title: 'Track messages and replies.',
-    description: 'Keep outreach history and status updates aligned to each profile in the database.',
-  },
-  {
-    label: 'Insights',
-    title: 'Manage your performance.',
-    description: 'View your progress across research, negotiations, and completed influencer onboarding in one place.',
-  },
-];
+interface InfluencerData {
+  username: string;
+  fullName?: string;
+  status?: string;
+  stage?: string;
+  owner?: string;
+  followers?: number;
+  engagementRate?: number;
+  location?: string;
+  preferredContact?: string;
+}
 
 export default function HomePage() {
+  const { user } = useAuth();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchState, setSearchState] = useState<'idle' | 'searching' | 'found' | 'missing'>('idle');
+  const [result, setResult] = useState<InfluencerData | null>(null);
+  const [message, setMessage] = useState('Enter a username to search the database or add a new influencer.');
+
+  const normalizedSearch = searchTerm.trim().replace(/^@/, '').toLowerCase();
+
+  async function handleSearch() {
+    if (!normalizedSearch) {
+      setSearchState('idle');
+      setResult(null);
+      setMessage('Please enter a username to search.');
+      return;
+    }
+
+    setSearchState('searching');
+    setMessage('Looking for influencer data...');
+
+    try {
+      const db = getFirestore();
+      const influencerQuery = query(
+        collection(db, 'influencers'),
+        where('username', '==', normalizedSearch)
+      );
+      const snapshot = await getDocs(influencerQuery);
+
+      if (!snapshot.empty) {
+        const docData = snapshot.docs[0].data() as InfluencerData;
+        setResult({
+          username: normalizedSearch,
+          fullName: docData.fullName ?? normalizedSearch,
+          status: docData.status ?? 'In Database',
+          stage: docData.stage ?? 'Researching',
+          owner: docData.owner ?? 'Unassigned',
+          followers: docData.followers ?? 0,
+          engagementRate: docData.engagementRate ?? 0,
+          location: docData.location ?? 'Unknown',
+          preferredContact: docData.preferredContact ?? 'DM / Email',
+        });
+        setSearchState('found');
+        setMessage('Influencer found in the database.');
+      } else {
+        setResult({
+          username: normalizedSearch,
+          status: 'Not in Database',
+          stage: 'New discovery',
+          owner: 'No owner assigned',
+          followers: 18300,
+          engagementRate: 4.9,
+          location: 'Mumbai',
+          preferredContact: 'DM / Email',
+        });
+        setSearchState('missing');
+        setMessage('No profile found. Add the influencer to the database.');
+      }
+    } catch (error) {
+      setSearchState('idle');
+      setMessage('Unable to search right now. Please try again later.');
+    }
+  }
+
   return (
-    <main className="min-h-screen px-6 pb-20 pt-10 lg:px-12">
-      <div className="mx-auto max-w-7xl space-y-14">
-        <section className="overflow-hidden rounded-[2rem] border border-slate-800 bg-gradient-to-br from-slate-950/95 via-slate-900/90 to-slate-950/95 p-8 shadow-glow">
-          <div className="grid gap-10 xl:grid-cols-[1.15fr_0.85fr] xl:items-center">
-            <div className="space-y-6">
-              <p className="text-sm uppercase tracking-[0.3em] text-brand-300">Knytra intern dashboard</p>
-              <h1 className="max-w-3xl text-5xl font-semibold tracking-tight text-white sm:text-6xl">
-                A real-time influencer operations workspace for interns and marketing teams.
-              </h1>
-              <p className="max-w-2xl text-base leading-8 text-slate-300">
-                Manage your roster, research new profiles, track outreach, and update the pipeline with live Firebase synchronization across every screen.
-              </p>
-              <div className="flex flex-col gap-4 sm:flex-row">
-                <Link
-                  href="/dashboard"
-                  className="inline-flex items-center justify-center rounded-full bg-brand-500 px-7 py-3 text-sm font-semibold text-white transition hover:bg-brand-400"
-                >
-                  Open intern dashboard
-                </Link>
-                <Link
-                  href="/add"
-                  className="inline-flex items-center justify-center rounded-full border border-slate-700 bg-slate-950 px-7 py-3 text-sm font-semibold text-slate-200 transition hover:border-brand-400 hover:text-brand-300"
-                >
-                  Add influencer profile
-                </Link>
-              </div>
-            </div>
+    <main className="min-h-screen bg-slate-950 px-6 py-10 text-slate-100 lg:px-12">
+      <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-6xl flex-col justify-between gap-14">
+        <section className="space-y-10 rounded-[2rem] border border-slate-800 bg-slate-950/90 p-10 shadow-glow">
+          <div className="text-center">
+            <p className="text-sm uppercase tracking-[0.35em] text-brand-300">Influencer search</p>
+            <h1 className="mx-auto mt-6 max-w-4xl text-5xl font-bold leading-tight text-white sm:text-6xl">
+              FIND OR ADD AN INFLUENCER
+            </h1>
+          </div>
 
-            <aside className="rounded-[2rem] border border-slate-800 bg-slate-950/70 p-8 shadow-glow">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-sm uppercase tracking-[0.28em] text-brand-300">Live snapshot</p>
-                  <p className="mt-2 text-2xl font-semibold text-white">Your campaign pulse</p>
-                </div>
-                <span className="rounded-full bg-brand-500/10 px-4 py-2 text-sm font-semibold text-brand-200">Live</span>
+          <div className="mx-auto max-w-3xl">
+            <div className="relative">
+              <input
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                onKeyDown={(event) => event.key === 'Enter' && handleSearch()}
+                placeholder="Enter @username here..."
+                className="w-full rounded-full border border-slate-800 bg-slate-900/95 px-6 py-4 pr-20 text-lg text-slate-100 outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-500/30"
+              />
+              <button
+                type="button"
+                onClick={handleSearch}
+                className="absolute right-2 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-brand-500 text-white transition hover:bg-brand-400"
+                aria-label="Search influencer"
+              >
+                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="m21 21-4.3-4.3" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div className="mx-auto max-w-5xl rounded-[2rem] border border-slate-800 bg-slate-900/80 p-8 shadow-glow">
+            {searchState === 'idle' && (
+              <div className="text-center text-slate-400">
+                <p className="text-xl font-semibold text-white">Search the database instantly.</p>
+                <p className="mt-3">Use the field above to check whether a creator is already being tracked or add them as a new influencer.</p>
               </div>
-              <div className="mt-8 grid gap-4">
-                {stats.map((item) => (
-                  <div key={item.label} className="rounded-3xl border border-slate-800 bg-slate-900/80 px-5 py-5">
-                    <p className="text-sm uppercase tracking-[0.24em] text-slate-400">{item.label}</p>
-                    <p className="mt-3 text-3xl font-semibold text-white">{item.value}</p>
+            )}
+            {searchState === 'searching' && <p className="text-center text-slate-300">{message}</p>}
+            {searchState === 'found' && result && (
+              <div className="grid gap-6 lg:grid-cols-2">
+                <div className="rounded-[1.75rem] border border-slate-800 bg-slate-950/90 p-8">
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-slate-800 text-2xl text-brand-300">@</div>
+                    <div>
+                      <p className="text-sm uppercase tracking-[0.25em] text-slate-400">In database</p>
+                      <p className="mt-2 text-2xl font-semibold text-white">@{result.username}</p>
+                    </div>
                   </div>
-                ))}
+                  <div className="mt-8 space-y-4 text-slate-300">
+                    <div>
+                      <p className="text-sm uppercase tracking-[0.2em] text-slate-500">Status</p>
+                      <p className="mt-1 text-lg font-semibold text-white">{result.status}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm uppercase tracking-[0.2em] text-slate-500">Stage</p>
+                      <p className="mt-1 text-lg font-semibold text-white">{result.stage}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm uppercase tracking-[0.2em] text-slate-500">Owner</p>
+                      <p className="mt-1 text-lg font-semibold text-white">{result.owner}</p>
+                    </div>
+                  </div>
+                  <div className="mt-8">
+                    <Link
+                      href={`/profile/${result.username}`}
+                      className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-950 px-6 py-3 text-sm font-semibold text-slate-100 transition hover:border-brand-400 hover:text-brand-300"
+                    >
+                      Open Profile
+                    </Link>
+                  </div>
+                </div>
+                <div className="rounded-[1.75rem] border border-slate-800 bg-slate-950/90 p-8">
+                  <p className="text-sm uppercase tracking-[0.2em] text-brand-300">Search result</p>
+                  <p className="mt-2 text-slate-300">{message}</p>
+                  <div className="mt-8 grid gap-4">
+                    <div className="rounded-3xl bg-slate-900/80 p-5">
+                      <p className="text-sm text-slate-400">Instagram sample</p>
+                      <p className="mt-3 text-2xl font-semibold text-white">{result.fullName ?? 'Instagram Creator'}</p>
+                      <p className="mt-2 text-slate-400">{result.followers?.toLocaleString()} followers · {result.engagementRate}% engagement</p>
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="rounded-3xl bg-slate-900/80 p-5">
+                        <p className="text-sm uppercase tracking-[0.2em] text-slate-400">Location</p>
+                        <p className="mt-2 text-white">{result.location}</p>
+                      </div>
+                      <div className="rounded-3xl bg-slate-900/80 p-5">
+                        <p className="text-sm uppercase tracking-[0.2em] text-slate-400">Contact</p>
+                        <p className="mt-2 text-white">{result.preferredContact}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </aside>
+            )}
+            {searchState === 'missing' && result && (
+              <div className="grid gap-6 lg:grid-cols-2">
+                <div className="rounded-[1.75rem] border border-slate-800 bg-slate-950/90 p-8">
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-slate-800 text-2xl text-brand-300">+</div>
+                    <div>
+                      <p className="text-sm uppercase tracking-[0.25em] text-slate-400">Not in database</p>
+                      <p className="mt-2 text-2xl font-semibold text-white">@{result.username}</p>
+                    </div>
+                  </div>
+                  <div className="mt-8 space-y-4 text-slate-300">
+                    <div>
+                      <p className="text-sm uppercase tracking-[0.2em] text-slate-500">Status</p>
+                      <p className="mt-1 text-lg font-semibold text-white">{result.status}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm uppercase tracking-[0.2em] text-slate-500">Stage</p>
+                      <p className="mt-1 text-lg font-semibold text-white">{result.stage}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm uppercase tracking-[0.2em] text-slate-500">Owner</p>
+                      <p className="mt-1 text-lg font-semibold text-white">{result.owner}</p>
+                    </div>
+                  </div>
+                  <div className="mt-8">
+                    <Link
+                      href={`/add?username=${encodeURIComponent(result.username)}`}
+                      className="inline-flex items-center gap-2 rounded-full bg-brand-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-brand-400"
+                    >
+                      Add to Database
+                    </Link>
+                  </div>
+                </div>
+                <div className="rounded-[1.75rem] border border-slate-800 bg-slate-950/90 p-8">
+                  <p className="text-sm uppercase tracking-[0.2em] text-brand-300">Placeholder profile</p>
+                  <div className="mt-5 grid gap-4">
+                    <div className="rounded-3xl bg-slate-900/80 p-5">
+                      <p className="text-sm uppercase tracking-[0.2em] text-slate-400">Followers</p>
+                      <p className="mt-2 text-2xl font-semibold text-white">{result.followers?.toLocaleString()}</p>
+                    </div>
+                    <div className="rounded-3xl bg-slate-900/80 p-5">
+                      <p className="text-sm uppercase tracking-[0.2em] text-slate-400">Engagement</p>
+                      <p className="mt-2 text-2xl font-semibold text-white">{result.engagementRate}%</p>
+                    </div>
+                    <div className="rounded-3xl bg-slate-900/80 p-5">
+                      <p className="text-sm uppercase tracking-[0.2em] text-slate-400">Location</p>
+                      <p className="mt-2 text-white">{result.location}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </section>
 
-        <section className="grid gap-6 lg:grid-cols-3">
-          {features.map((feature) => (
-            <article key={feature.label} className="rounded-[2rem] border border-slate-800 bg-slate-950/70 p-8 shadow-glow">
-              <p className="text-sm uppercase tracking-[0.3em] text-brand-300">{feature.label}</p>
-              <h2 className="mt-3 text-2xl font-semibold text-white">{feature.title}</h2>
-              <p className="mt-4 text-slate-300">{feature.description}</p>
-            </article>
-          ))}
-        </section>
-
-        <section className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-          <div className="rounded-[2rem] border border-slate-800 bg-slate-900/80 p-10 shadow-glow">
-            <p className="text-sm uppercase tracking-[0.3em] text-brand-300">Get started</p>
-            <h2 className="mt-3 text-3xl font-semibold text-white">Build your live influencer database today.</h2>
-            <p className="mt-4 max-w-2xl text-slate-300 leading-8">
-              Sign in, add your first influencer, and use the dashboard to move profiles through research, outreach, and onboarding stages with real-time Firestore syncing.
+        <footer className="rounded-[2rem] border border-slate-800 bg-slate-900/80 p-8 text-slate-300 shadow-glow">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <p>
+              Hey <span className="font-semibold text-white">{user?.displayName ?? user?.email ?? 'Intern'}</span>, use this page to quickly check if an influencer is already being tracked or click Add to Database for new discoveries.
             </p>
-            <div className="mt-8 flex flex-wrap gap-4">
-              <Link
-                href="/auth"
-                className="inline-flex items-center justify-center rounded-full bg-brand-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-brand-400"
-              >
-                Sign up / log in
-              </Link>
-              <Link
-                href="/database"
-                className="inline-flex items-center justify-center rounded-full border border-slate-700 bg-slate-950 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-brand-400 hover:text-brand-300"
-              >
-                Explore database
-              </Link>
-            </div>
+            <p className="text-sm text-slate-500">© KNYTRA</p>
           </div>
-
-          <div className="rounded-[2rem] border border-slate-800 bg-slate-950/70 p-10 shadow-glow text-slate-200">
-            <p className="text-sm uppercase tracking-[0.3em] text-brand-300">Featured intern workflow</p>
-            <ul className="mt-6 space-y-4 text-slate-300">
-              <li className="rounded-3xl border border-slate-800 bg-slate-900/80 p-4">Search or add new influencer profiles.</li>
-              <li className="rounded-3xl border border-slate-800 bg-slate-900/80 p-4">Capture research, contact preference and outreach notes.</li>
-              <li className="rounded-3xl border border-slate-800 bg-slate-900/80 p-4">Track replies, negotiation status and onboarding progress.</li>
-            </ul>
-          </div>
-        </section>
+        </footer>
       </div>
     </main>
   );
