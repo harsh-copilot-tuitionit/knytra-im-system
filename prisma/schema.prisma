@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String         @id @default(cuid())
+  name           String
+  email          String         @unique
+  role           String         @default("intern")
+  submittedLeads InfluencerLead[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model InfluencerLead {
+  id                String           @id @default(cuid())
+  instagramUsername String           @unique
+  niche             String
+  followerRange     String
+  location          String
+  notes             String?
+  status            String           @default("new")
+  submittedBy       User             @relation(fields: [submittedById], references: [id])
+  submittedById     String
+  rejectionReason   String?
+  assignedAccount   OutreachAccount? @relation(fields: [assignedAccountId], references: [id])
+  assignedAccountId String?
+  jobs              OutreachJob[]
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+}
+
+model OutreachAccount {
+  id                String         @id @default(cuid())
+  label             String
+  username          String
+  status            String         @default("active")
+  dailyLimit        Int            @default(0)
+  messagesSentToday Int            @default(0)
+  healthNotes       String?
+  leads             InfluencerLead[]
+  jobs              OutreachJob[]
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+}
+
+model OutreachJob {
+  id           String         @id @default(cuid())
+  lead         InfluencerLead @relation(fields: [leadId], references: [id])
+  leadId       String
+  account      OutreachAccount @relation(fields: [accountId], references: [id])
+  accountId    String
+  status       String         @default("queued")
+  attemptCount Int            @default(0)
+  scheduledAt  DateTime?
+  startedAt    DateTime?
+  completedAt  DateTime?
+  errorMessage String?
+  logs         AutomationLog[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model AutomationLog {
+  id        String        @id @default(cuid())
+  job       OutreachJob   @relation(fields: [jobId], references: [id])
+  jobId     String
+  level     String        @default("info")
+  message   String
+  createdAt DateTime      @default(now())
+}
