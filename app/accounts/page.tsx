@@ -13,6 +13,13 @@ type Account = {
   healthNotes?: string;
 };
 
+const statusStyles: Record<string, string> = {
+  active: 'badge badge-active',
+  warming: 'badge badge-warming',
+  paused: 'badge badge-paused',
+  blocked: 'badge badge-blocked',
+};
+
 export default function AccountsPage() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(false);
@@ -49,8 +56,11 @@ export default function AccountsPage() {
         <div className="grid stats-grid">
           {accounts.map((account) => (
             <div key={account.id} className="card">
-              <p className="card-title">{account.label}</p>
-              <p className="card-value">{account.status}</p>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <p className="card-title">{account.label}</p>
+                <span className={statusStyles[account.status] ?? 'badge'}>{account.status}</span>
+              </div>
+              <p className="card-value">{account.username}</p>
               <p>Daily limit: {account.dailyLimit}</p>
               <p>Messages sent today: {account.messagesSentToday}</p>
               <p>Health notes: {account.healthNotes || 'No notes yet.'}</p>

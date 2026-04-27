@@ -9,5 +9,18 @@ export async function GET() {
       account: true,
     },
   });
-  return NextResponse.json(jobs);
+
+  const mapped = jobs.map((job) => ({
+    id: job.id,
+    status: job.status,
+    scheduledAt: job.scheduledAt,
+    attemptCount: job.attemptCount,
+    errorMessage: job.errorMessage,
+    createdAt: job.createdAt,
+    leadInstagramUsername: job.lead.instagramUsername,
+    accountLabel: job.account.label,
+    accountUsername: job.account.username,
+  }));
+
+  return NextResponse.json(mapped);
 }

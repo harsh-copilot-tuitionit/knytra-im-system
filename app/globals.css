@@ -169,3 +169,32 @@ button, input, select, textarea {
 .status-converted { background: rgba(124, 58, 237, 0.16); color: #c4b5fd; }
 .status-failed { background: rgba(248, 113, 113, 0.16); color: #fca5a5; }
 .status-do_not_contact { background: rgba(100, 116, 139, 0.16); color: #cbd5e1; }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.badge-active {
+  background: rgba(16, 185, 129, 0.16);
+  color: #047857;
+}
+
+.badge-warming {
+  background: rgba(234, 179, 8, 0.16);
+  color: #b45309;
+}
+
+.badge-paused {
+  background: rgba(148, 163, 184, 0.16);
+  color: #475569;
+}
+
+.badge-blocked {
+  background: rgba(244, 63, 94, 0.16);
+  color: #b91c1c;
+}

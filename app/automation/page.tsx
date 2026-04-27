@@ -8,7 +8,11 @@ type Job = {
   status: string;
   attemptCount: number;
   scheduledAt: string | null;
+  errorMessage?: string | null;
   createdAt: string;
+  leadInstagramUsername: string;
+  accountLabel: string;
+  accountUsername: string;
 };
 
 type Log = {
@@ -76,14 +80,48 @@ export default function AutomationPage() {
           </section>
 
           <section className="page-card">
-            <h2 className="card-title">Worker status</h2>
-            <p>Worker data is sourced from the automation API endpoints.</p>
-            <div className="card" style={{ marginTop: '16px' }}>
-              <p className="card-title">Recent logs</p>
-              {logs.slice(0, 5).map((log) => (
-                <p key={log.id}>• [{log.level}] {log.message}</p>
-              ))}
+            <h2 className="card-title">Queued and processed jobs</h2>
+            <div style={{ overflowX: 'auto' }}>
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Job ID</th>
+                    <th>Influencer</th>
+                    <th>Account</th>
+                    <th>Account user</th>
+                    <th>Status</th>
+                    <th>Scheduled</th>
+                    <th>Attempts</th>
+                    <th>Error</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {jobs.map((job) => (
+                    <tr key={job.id}>
+                      <td>{job.id}</td>
+                      <td>{job.leadInstagramUsername}</td>
+                      <td>{job.accountLabel}</td>
+                      <td>{job.accountUsername}</td>
+                      <td>{job.status}</td>
+                      <td>{job.scheduledAt ? new Date(job.scheduledAt).toLocaleString() : 'n/a'}</td>
+                      <td>{job.attemptCount}</td>
+                      <td>{job.errorMessage || '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
+          </section>
+
+          <section className="page-card">
+            <h2 className="card-title">Recent logs</h2>
+            {logs.length === 0 ? (
+              <p>No automation logs yet.</p>
+            ) : (
+              logs.slice(0, 10).map((log) => (
+                <p key={log.id}>• [{log.level}] {log.message}</p>
+              ))
+            )}
           </section>
         </>
       )}

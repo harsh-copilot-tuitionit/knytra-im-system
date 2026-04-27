@@ -13,6 +13,12 @@ type Lead = {
   notes?: string;
   status: string;
   createdAt: string;
+  assignedAccount?: {
+    id: string;
+    label: string;
+    username: string;
+    status: string;
+  } | null;
 };
 
 const leadStatuses = [
@@ -190,6 +196,7 @@ export default function LeadsPage() {
                 <th>Niche</th>
                 <th>Range</th>
                 <th>Location</th>
+                <th>Assigned account</th>
                 <th>Status</th>
                 <th>Created</th>
                 <th>Actions</th>
@@ -202,6 +209,7 @@ export default function LeadsPage() {
                   <td>{lead.niche}</td>
                   <td>{lead.followerRange}</td>
                   <td>{lead.location}</td>
+                  <td>{lead.assignedAccount ? lead.assignedAccount.label : '-'}</td>
                   <td><LeadStatusBadge status={lead.status} /></td>
                   <td>{new Date(lead.createdAt).toLocaleString()}</td>
                   <td style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
