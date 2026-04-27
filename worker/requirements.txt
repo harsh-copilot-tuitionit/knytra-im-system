@@ -1,0 +1,1 @@
+# Placeholder dependencies for the Python automation worker

@@ -1,23 +1,15 @@
-import type { Metadata } from 'next';
-import type { ReactNode } from 'react';
 import './globals.css';
-import { Providers } from './providers';
-import { NavBar } from '../components/NavBar';
+import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Knytra Influence Hub',
-  description: 'Next-gen influencer management with real-time Firebase collaboration.',
+  title: 'Knytra IM System',
+  description: 'Internal CRM and automation dashboard for influencer sourcing and outreach.',
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="bg-slate-950 text-slate-100">
-        <Providers>
-          <NavBar />
-          {children}
-        </Providers>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

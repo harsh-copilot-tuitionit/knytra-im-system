@@ -1,64 +1,46 @@
-# Knytra Influence Hub
+# Knytra IM System
 
-A modern influencer management website built with Next.js, TypeScript, Tailwind CSS, Firebase Auth, Firestore, and optional Firebase Hosting.
+Knytra IM System is an internal web app for influencer sourcing, lead review, outreach queue management, and campaign tracking. It replaces the old spreadsheet-driven process with a modern frontend experience for interns and operators.
 
-## What is included
+## Product Purpose
 
-- Next.js app router with TypeScript
-- Tailwind CSS styling
-- Firebase Auth for email/password + Google login
-- Firestore real-time listeners for campaigns and influencers
-- Admin settings page that writes directly to Firestore
-- Firebase Hosting / Vercel ready deployment configuration
+This repository hosts the frontend and backend scaffolding for an internal influencer marketing system. Interns submit leads through a web form, admins review and approve candidates, and a background worker will later process outreach jobs.
 
-## Setup
+## Architecture
 
-1. Install dependencies:
+- **Next.js app** for the frontend and API routes
+- **TypeScript** for type safety
+- **React** for UI components
+- **Python worker** placeholder for future automation
+- **Environment variables** configured through `.env.example`
 
-```bash
-npm install
-```
+## Frontend App
 
-2. Copy environment values:
+The frontend includes:
+- Home page with product overview
+- Dashboard with placeholder lead and outreach metrics
+- Leads page with submission form and lead status table
+- Accounts page with outreach account health cards
+- Automation page with queue and worker status placeholders
 
-```bash
-copy .env.local.example .env.local
-```
+## Python Worker
 
-3. Add your Firebase project values to `.env.local`.
+The `worker/` folder contains a future automation worker scaffold. It prints worker activity in a loop and is intended to be extended into a queued outreach processor.
 
-4. Run locally:
+## Current MVP Scope
 
-```bash
-npm run dev
-```
+- Frontend-first internal app experience
+- Basic lead submission form
+- Placeholder review and queue UI
+- API health endpoint
+- Python worker placeholder
 
-5. Open `http://localhost:3000`.
+## Future Features
 
-## Firebase setup
-
-1. Create a Firebase project at https://console.firebase.google.com.
-2. Enable Authentication (Email/Password and Google).
-3. Create a Firestore database in production or test mode.
-4. Add a Web app and copy the config values to `.env.local`.
-
-## Deploying
-
-### Firebase Hosting
-
-```bash
-npm install -g firebase-tools
-firebase login
-firebase init hosting
-firebase deploy
-```
-
-### Vercel
-
-Connect the repository to Vercel and add all `NEXT_PUBLIC_FIREBASE_*` env variables.
-
-## Notes
-
-- The dashboard and settings use Firestore `onSnapshot` for real-time updates.
-- The admin settings page writes brand profile data to `settings/brand`.
-- Use `/auth` to sign in and `/dashboard` to view live data.
+- Authentication and role-based access
+- Database integration for leads, accounts, and jobs
+- Lead review workflow with approve/reject logic
+- Outreach job queue and worker scheduling
+- Message templates and outreach status tracking
+- Account health monitoring and reporting
+- Python worker automation integration
