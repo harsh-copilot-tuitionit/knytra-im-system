@@ -24,10 +24,12 @@ export default function HomePage() {
   const [searchState, setSearchState] = useState<'idle' | 'searching' | 'found' | 'missing'>('idle');
   const [result, setResult] = useState<InfluencerData | null>(null);
   const [message, setMessage] = useState('Enter a username to search the database or add a new influencer.');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const normalizedSearch = searchTerm.trim().replace(/^@/, '').toLowerCase();
 
   async function handleSearch() {
+    setErrorMessage(null);
     if (!normalizedSearch) {
       setSearchState('idle');
       setResult(null);
@@ -40,6 +42,9 @@ export default function HomePage() {
 
     try {
       const db = getFirestore();
+      if (!db) {
+        throw new Error('Firestore is not initialized');
+      }
       const influencerQuery = query(
         collection(db, 'influencers'),
         where('username', '==', normalizedSearch)
@@ -76,7 +81,9 @@ export default function HomePage() {
         setMessage('No profile found. Add the influencer to the database.');
       }
     } catch (error) {
+      console.error(error);
       setSearchState('idle');
+      setErrorMessage('Unable to search right now. Please try again later.');
       setMessage('Unable to search right now. Please try again later.');
     }
   }
@@ -123,6 +130,7 @@ export default function HomePage() {
               </div>
             )}
             {searchState === 'searching' && <p className="text-center text-slate-300">{message}</p>}
+            {errorMessage && <p className="text-center text-red-400 font-semibold mt-4">{errorMessage}</p>}
             {searchState === 'found' && result && (
               <div className="grid gap-6 lg:grid-cols-2">
                 <div className="rounded-[1.75rem] border border-slate-800 bg-slate-950/90 p-8">

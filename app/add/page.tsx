@@ -28,6 +28,8 @@ export default function AddPage() {
   const [message, setMessage] = useState('Complete the profile to add this influencer to the database.');
   const [existing, setExisting] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (username.trim().length < 3) {
@@ -53,41 +55,50 @@ export default function AddPage() {
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setErrorMessage(null);
+    setSuccessMessage(null);
     if (!username.trim() || !fullName.trim()) {
       setMessage('Please add a username and full name before you submit.');
+      setErrorMessage('Please add a username and full name before you submit.');
       return;
     }
 
     setBusy(true);
+    const payload = {
+      username: username.trim().toLowerCase(),
+      fullName: fullName.trim(),
+      status: 'In our Database',
+      stage: 'Found',
+      activeStatus: instagramActivity,
+      location: location.trim(),
+      niche: niche.trim(),
+      brandFit,
+      contentQuality,
+      riskNotes: riskNotes.trim(),
+      priority,
+      preferredContact,
+      outreachNotes: outreachNotes.trim(),
+      ownerId: user?.uid ?? '',
+      ownerName: user?.displayName ?? user?.email ?? 'Intern',
+      ownerEmail: user?.email ?? '',
+      assignedAt: serverTimestamp(),
+      researchDueAt: Timestamp.fromDate(new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)),
+      researchStatus: 'Pending',
+      researchCompletedAt: null,
+      followers: 0,
+      engagementRate: 0,
+      lastMessage: outreachNotes.trim(),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
     try {
       const db = getFirestore();
-      await addDoc(collection(db, 'influencers'), {
-        username: username.trim().toLowerCase(),
-        fullName: fullName.trim(),
-        status: 'In our Database',
-        stage: 'Found',
-        activeStatus: instagramActivity,
-        location: location.trim(),
-        niche: niche.trim(),
-        brandFit,
-        contentQuality,
-        riskNotes: riskNotes.trim(),
-        priority,
-        preferredContact,
-        outreachNotes: outreachNotes.trim(),
-        ownerId: user?.uid ?? '',
-        ownerName: user?.displayName ?? user?.email ?? 'Intern',
-        ownerEmail: user?.email ?? '',
-        assignedAt: serverTimestamp(),
-        researchDueAt: Timestamp.fromDate(new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)),
-        researchStatus: 'Pending',
-        researchCompletedAt: null,
-        followers: 0,
-        engagementRate: 0,
-        lastMessage: outreachNotes.trim(),
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
+      if (!db) {
+        throw new Error('Firestore is not initialized');
+      }
+      console.log('Submitting influencer:', payload);
+      await addDoc(collection(db, 'influencers'), payload);
+      setSuccessMessage('Influencer successfully added to the database. Redirect to profile to continue updates.');
       setMessage('Influencer successfully added to the database. Redirect to profile to continue updates.');
       setUsername('');
       setFullName('');
@@ -95,7 +106,10 @@ export default function AddPage() {
       setNiche('');
       setRiskNotes('');
       setOutreachNotes('');
+      console.log('Influencer added successfully');
     } catch (error) {
+      console.error(error);
+      setErrorMessage('Failed to add profile. Please try again.');
       setMessage('Failed to add profile. Please try again.');
     } finally {
       setBusy(false);
@@ -311,6 +325,8 @@ export default function AddPage() {
               Submit to database
             </button>
             <p className="mt-4 text-sm text-slate-400">{message}</p>
+            {errorMessage && <p className="mt-2 text-red-400 font-semibold">{errorMessage}</p>}
+            {successMessage && <p className="mt-2 text-emerald-400 font-semibold">{successMessage}</p>}
           </section>
         </form>
       </div>
