@@ -1,15 +1,19 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../../lib/db';
 import { assignOutreachAccount } from '../../../../lib/account-assignment';
+import { dbUnavailableResponse, handleApiError } from '../../../../lib/api-utils';
 
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
-  const { id } = params;
-  const body = await request.json();
-  const { status, rejectionReason } = body;
+  if (!prisma) return dbUnavailableResponse();
 
-  if (!status) {
-    return NextResponse.json({ error: 'Status is required' }, { status: 400 });
-  }
+  try {
+    const { id } = params;
+    const body = await request.json();
+    const { status, rejectionReason } = body;
+
+    if (!status) {
+      return NextResponse.json({ error: 'Status is required' }, { status: 400 });
+    }
 
   const validStatuses = ['approved', 'rejected', 'queued', 'do_not_contact'];
   if (!validStatuses.includes(status)) {
@@ -86,4 +90,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   });
 
   return NextResponse.json(updatedLead);
+  } catch (error) {
+    return handleApiError(error);
+  }
 }

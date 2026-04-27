@@ -68,6 +68,14 @@ npm run dev
 - Prisma schema is located in `prisma/schema.prisma`.
 - Seed data creates an admin user, intern user, and five outreach accounts.
 
+## Firebase Production Deployment
+
+- SQLite is only intended for local development.
+- Firebase App Hosting production requires an external hosted database such as Supabase or Neon.
+- `DATABASE_URL` must be configured in Firebase App Hosting environment variables.
+- `WORKER_SECRET` should also be set in production instead of using the local default.
+- The app can build locally with SQLite fallback, but production Firebase deployment needs a production-compatible database provider and connection string.
+
 ## API Routes
 
 - `GET /api/health` — service status
