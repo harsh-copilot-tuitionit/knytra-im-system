@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import AppShell from '../../components/AppShell';
+import { fetchArrayOrThrow } from '../../lib/client-api';
 
 type Job = {
   id: string;
@@ -33,11 +34,19 @@ export default function AutomationPage() {
       setLoading(true);
       setErrorMessage('');
       try {
-        const [jobsRes, logsRes] = await Promise.all([fetch('/api/jobs'), fetch('/api/logs')]);
-        setJobs(await jobsRes.json());
-        setLogs(await logsRes.json());
-      } catch (error) {
-        setErrorMessage('Unable to load automation data.');
+        const [jobsData, logsData] = await Promise.all([
+          fetchArrayOrThrow<Job>('/api/jobs'),
+          fetchArrayOrThrow<Log>('/api/logs'),
+        ]);
+        setJobs(jobsData);
+        setLogs(logsData);
+      } catch (error: any) {
+        setJobs([]);
+        setLogs([]);
+        setErrorMessage(
+          error?.message ||
+            'Automation data unavailable. Check database configuration. Database is not configured for this deployment. Add a production DATABASE_URL in Firebase App Hosting settings.',
+        );
       } finally {
         setLoading(false);
       }

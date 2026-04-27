@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import AppShell from '../../components/AppShell';
 import LeadStatusBadge from '../../components/LeadStatusBadge';
+import { fetchArrayOrThrow } from '../../lib/client-api';
 
 type Lead = {
   id: string;
@@ -43,11 +44,14 @@ export default function LeadsPage() {
     setLoading(true);
     setErrorMessage('');
     try {
-      const response = await fetch('/api/leads');
-      const data = await response.json();
+      const data = await fetchArrayOrThrow<Lead>('/api/leads');
       setLeads(data);
-    } catch (error) {
-      setErrorMessage('Unable to load leads.');
+    } catch (error: any) {
+      setLeads([]);
+      setErrorMessage(
+        error?.message ||
+          'Database is not configured for this deployment. Add a production DATABASE_URL in Firebase App Hosting settings.',
+      );
     } finally {
       setLoading(false);
     }

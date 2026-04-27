@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import AppShell from '../../components/AppShell';
+import { fetchArrayOrThrow } from '../../lib/client-api';
 
 type Account = {
   id: string;
@@ -30,11 +31,14 @@ export default function AccountsPage() {
       setLoading(true);
       setErrorMessage('');
       try {
-        const response = await fetch('/api/accounts');
-        const data = await response.json();
+        const data = await fetchArrayOrThrow<Account>('/api/accounts');
         setAccounts(data);
-      } catch (error) {
-        setErrorMessage('Unable to load accounts.');
+      } catch (error: any) {
+        setAccounts([]);
+        setErrorMessage(
+          error?.message ||
+            'Accounts unavailable. Check database configuration. Database is not configured for this deployment. Add a production DATABASE_URL in Firebase App Hosting settings.',
+        );
       } finally {
         setLoading(false);
       }
