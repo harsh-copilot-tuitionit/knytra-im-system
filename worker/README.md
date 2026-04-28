@@ -57,7 +57,8 @@ Run Instagram mode:
 WORKER_MODE=instagram INSTAGRAM_HEADLESS=false WORKER_SECRET=<worker-secret> APP_BASE_URL=http://localhost:3000 python worker/main.py --account-id <accountId>
 ```
 
-In Instagram mode, the worker will open a browser and navigate to Instagram, but it will not send any direct messages yet.
+In Instagram mode, the worker will open a browser, load Instagram, and open the influencer profile for the queued job.
+It will not send any direct messages yet.
 
 ### Instagram login session storage
 

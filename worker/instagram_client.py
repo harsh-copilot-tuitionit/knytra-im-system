@@ -76,6 +76,29 @@ def wait_for_login(page: Page) -> None:
             time.sleep(2)
 
 
+def open_profile(page: Page, username: str) -> None:
+    clean_username = username.lstrip('@').strip().lower()
+    profile_url = f'https://www.instagram.com/{clean_username}/'
+    print(f'Instagram client: opening influencer profile {profile_url}')
+    page.goto(profile_url, timeout=30000)
+    page.wait_for_load_state('networkidle')
+
+    try:
+        if page.locator('text=Sorry, this page isn\'t available.').count() > 0:
+            raise RuntimeError(f'Instagram profile {clean_username} was not found')
+    except Exception:
+        pass
+
+    try:
+        if page.locator('img[alt*="profile picture"]').count() > 0 or page.locator('header').count() > 0:
+            print(f'Instagram client: profile page loaded for @{clean_username}')
+            return
+    except Exception as error:
+        print(f'Instagram client: profile page detection error: {error}')
+
+    print(f'Instagram client: profile page opened for @{clean_username} (could not verify exact profile elements)')
+
+
 def close_browser(playwright: Any, context: BrowserContext) -> None:
     try:
         context.close()

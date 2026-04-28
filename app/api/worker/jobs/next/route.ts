@@ -35,5 +35,12 @@ export async function GET(request: Request) {
     return NextResponse.json(null);
   }
 
-  return NextResponse.json(job);
+  return NextResponse.json({
+    jobId: job.id,
+    leadId: job.leadId,
+    instagramUsername: job.lead.instagramUsername,
+    accountId: job.accountId,
+    accountLabel: job.account.label,
+    accountUsername: job.account.username,
+  });
 }

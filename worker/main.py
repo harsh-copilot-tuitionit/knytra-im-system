@@ -5,7 +5,7 @@ from typing import Any, Optional
 import requests
 
 import config
-from instagram_client import close_browser, is_logged_in, open_instagram, start_browser, wait_for_login
+from instagram_client import close_browser, is_logged_in, open_instagram, open_profile, start_browser, wait_for_login
 
 APP_BASE_URL = config.APP_BASE_URL
 WORKER_SECRET = config.WORKER_SECRET
@@ -80,12 +80,15 @@ def run_dummy_job(job_id: str):
     print(f'Worker: job {job_id} completed with data: {complete_data}')
 
 
-def run_instagram_job(job_id: str, account_id: str, dry_run: bool):
+def run_instagram_job(job_id: str, account_id: str, instagram_username: Optional[str], dry_run: bool):
     if not account_id:
         raise RuntimeError('Instagram mode requires --account-id or WORKER_ACCOUNT_ID')
+    if not instagram_username:
+        raise RuntimeError('Instagram mode requires a lead instagramUsername')
 
     print('Worker mode: instagram')
     print(f'Worker: selected account id {account_id}')
+    print(f'Worker: opening influencer profile @{instagram_username.lstrip("@")}')
     start_job(job_id)
     print(f'Worker: job {job_id} marked running')
 
@@ -103,12 +106,15 @@ def run_instagram_job(job_id: str, account_id: str, dry_run: bool):
             wait_for_login(page)
             print('Instagram session ready.')
 
+        open_profile(page, instagram_username)
+        print(f'Opened Instagram profile @{instagram_username.lstrip("@")}')
+
         if dry_run:
             print('Worker: instagram dry-run mode enabled; marking job completed without sending messages')
             complete_data = complete_job(job_id)
             print(f'Worker: job {job_id} completed with data: {complete_data}')
         else:
-            raise RuntimeError('Instagram session ready; message sending not enabled yet')
+            raise RuntimeError('Instagram profile opened; message sending not enabled yet')
     finally:
         if playwright is not None and context is not None:
             close_browser(playwright, context)
@@ -129,7 +135,8 @@ def main(account_id: Optional[str] = None, dry_run: bool = False) -> None:
             time.sleep(10)
             continue
 
-        job_id = job.get('id')
+        job_id = job.get('jobId') or job.get('id')
+        instagram_username = job.get('instagramUsername')
         print(f'Worker: found job {job_id}, starting')
 
         try:
@@ -138,7 +145,7 @@ def main(account_id: Optional[str] = None, dry_run: bool = False) -> None:
             elif WORKER_MODE == 'instagram':
                 if not account_id:
                     raise RuntimeError('Instagram mode requires --account-id or WORKER_ACCOUNT_ID')
-                run_instagram_job(job_id, account_id, dry_run)
+                run_instagram_job(job_id, account_id, instagram_username, dry_run)
             else:
                 raise RuntimeError(f'Unknown worker mode: {WORKER_MODE}')
         except Exception as error:
