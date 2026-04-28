@@ -8,12 +8,15 @@ The worker will later poll queued leads and process outreach jobs in the backgro
 
 ## Current behavior
 
-- Prints a startup message
-- Loops every 10 seconds
-- Prints a queue check message
+- Polls the app for the oldest queued outreach job every 10 seconds
+- Marks the job as running
+- Waits 3 seconds and then marks the job as completed
+- Updates the linked lead to `messaged`
+- Increments the assigned account's `messagesSentToday`
+- Creates automation logs for start/completion events
 
 ## Running
 
 ```bash
-python worker/main.py
+WORKER_SECRET=<worker-secret> APP_BASE_URL=http://localhost:3000 python worker/main.py
 ```
