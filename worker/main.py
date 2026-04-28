@@ -50,7 +50,9 @@ def complete_job(job_id: str):
     response = requests.post(url, headers=HEADERS, timeout=30)
     if response.status_code != 200:
         raise RuntimeError(f'Complete failed: {response.status_code} {response.text}')
-    return response.json()
+    data = response.json()
+    print(f'Worker: complete response: {data}')
+    return data
 
 
 def fail_job(job_id: str, message: str):
@@ -88,8 +90,8 @@ def main(account_id: Optional[str] = None) -> None:
             start_job(job_id)
             print(f'Worker: job {job_id} marked running')
             time.sleep(3)
-            complete_job(job_id)
-            print(f'Worker: job {job_id} completed')
+            complete_data = complete_job(job_id)
+            print(f'Worker: job {job_id} completed with data: {complete_data}')
         except Exception as error:
             print(f'Worker: job {job_id} failed with error: {error}')
             try:

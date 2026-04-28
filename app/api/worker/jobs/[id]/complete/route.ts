@@ -30,6 +30,10 @@ export async function POST(request: Request, { params }: { params: { id: string 
       status: 'completed',
       completedAt: new Date(),
     },
+    include: {
+      lead: true,
+      account: true,
+    },
   });
 
   await prisma.influencerLead.update({
@@ -39,7 +43,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
     },
   });
 
-  await prisma.outreachAccount.update({
+  const accountUpdate = await prisma.outreachAccount.update({
     where: { id: job.accountId },
     data: {
       messagesSentToday: job.account.messagesSentToday + 1,
@@ -54,5 +58,10 @@ export async function POST(request: Request, { params }: { params: { id: string 
     },
   });
 
-  return NextResponse.json(updatedJob);
+  return NextResponse.json({
+    jobId: updatedJob.id,
+    status: updatedJob.status,
+    leadStatus: 'messaged',
+    accountMessagesSentToday: accountUpdate.messagesSentToday,
+  });
 }

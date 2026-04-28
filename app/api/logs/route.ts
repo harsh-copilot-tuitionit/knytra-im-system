@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { prisma } from '../../../lib/db';
 import { dbUnavailableResponse, handleApiError } from '../../../lib/api-utils';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   if (!prisma) return dbUnavailableResponse();
 
@@ -12,7 +14,11 @@ export async function GET() {
         job: true,
       },
     });
-    return NextResponse.json(logs);
+    return NextResponse.json(logs, {
+      headers: {
+        'Cache-Control': 'no-store',
+      },
+    });
   } catch (error) {
     return handleApiError(error);
   }

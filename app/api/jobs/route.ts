@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { prisma } from '../../../lib/db';
 import { dbUnavailableResponse, handleApiError } from '../../../lib/api-utils';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   if (!prisma) return dbUnavailableResponse();
 
@@ -26,7 +28,11 @@ export async function GET() {
       accountUsername: job.account.username,
     }));
 
-    return NextResponse.json(mapped);
+    return NextResponse.json(mapped, {
+      headers: {
+        'Cache-Control': 'no-store',
+      },
+    });
   } catch (error) {
     return handleApiError(error);
   }
