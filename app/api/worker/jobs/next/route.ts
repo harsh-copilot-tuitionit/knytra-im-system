@@ -10,7 +10,13 @@ export async function GET(request: Request) {
 
   const url = new URL(request.url);
   const accountId = url.searchParams.get('accountId') ?? undefined;
-  const where: { status: 'queued'; accountId?: string } = { status: 'queued' };
+
+  const where: any = {
+    status: 'queued',
+    account: {
+      status: 'active',
+    },
+  };
 
   if (accountId) {
     where.accountId = accountId;
