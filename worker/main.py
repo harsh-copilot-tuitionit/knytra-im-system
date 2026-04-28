@@ -1,16 +1,17 @@
 import argparse
-import os
 import time
-from typing import Optional
+from typing import Any, Optional
 
 import requests
-from dotenv import load_dotenv
 
-load_dotenv()
+import config
+from instagram_client import close_browser, open_instagram, start_browser
 
-APP_BASE_URL = os.getenv('APP_BASE_URL', 'http://localhost:3000').rstrip('/')
-WORKER_SECRET = os.getenv('WORKER_SECRET')
-WORKER_ACCOUNT_ID = os.getenv('WORKER_ACCOUNT_ID')
+APP_BASE_URL = config.APP_BASE_URL
+WORKER_SECRET = config.WORKER_SECRET
+WORKER_ACCOUNT_ID = config.WORKER_ACCOUNT_ID
+WORKER_MODE = config.WORKER_MODE
+WORKER_DRY_RUN = config.WORKER_DRY_RUN
 
 if not WORKER_SECRET:
     raise SystemExit('Missing WORKER_SECRET environment variable')
@@ -66,11 +67,47 @@ def fail_job(job_id: str, message: str):
 def parse_args():
     parser = argparse.ArgumentParser(description='Knytra IM worker')
     parser.add_argument('--account-id', dest='account_id', default=WORKER_ACCOUNT_ID)
+    parser.add_argument('--dry-run', action='store_true', dest='dry_run', default=WORKER_DRY_RUN)
     return parser.parse_args()
 
 
-def main(account_id: Optional[str] = None) -> None:
+def run_dummy_job(job_id: str):
+    print('Worker mode: dummy')
+    start_job(job_id)
+    print(f'Worker: job {job_id} marked running')
+    time.sleep(3)
+    complete_data = complete_job(job_id)
+    print(f'Worker: job {job_id} completed with data: {complete_data}')
+
+
+def run_instagram_job(job_id: str, dry_run: bool):
+    print('Worker mode: instagram')
+    start_job(job_id)
+    print(f'Worker: job {job_id} marked running')
+
+    playwright = None
+    browser = None
+    page = None
+
+    try:
+        playwright, browser, page = start_browser()
+        open_instagram(page)
+        print(f'Worker: Instagram mode opened browser for job {job_id}')
+
+        if dry_run:
+            print('Worker: instagram dry-run mode enabled; marking job completed without sending messages')
+            complete_data = complete_job(job_id)
+            print(f'Worker: job {job_id} completed with data: {complete_data}')
+        else:
+            raise RuntimeError('Instagram mode scaffolded; message sending not enabled yet')
+    finally:
+        if playwright is not None and browser is not None:
+            close_browser(playwright, browser)
+
+
+def main(account_id: Optional[str] = None, dry_run: bool = False) -> None:
     print('Knytra IM worker started')
+    print(f'Worker mode: {WORKER_MODE}')
     print(f'Using app base URL: {APP_BASE_URL}')
     if account_id:
         print(f'Polling jobs for account: {account_id}')
@@ -84,14 +121,15 @@ def main(account_id: Optional[str] = None) -> None:
             continue
 
         job_id = job.get('id')
-        print(f"Worker: found job {job_id}, starting")
+        print(f'Worker: found job {job_id}, starting')
 
         try:
-            start_job(job_id)
-            print(f'Worker: job {job_id} marked running')
-            time.sleep(3)
-            complete_data = complete_job(job_id)
-            print(f'Worker: job {job_id} completed with data: {complete_data}')
+            if WORKER_MODE == 'dummy':
+                run_dummy_job(job_id)
+            elif WORKER_MODE == 'instagram':
+                run_instagram_job(job_id, dry_run)
+            else:
+                raise RuntimeError(f'Unknown worker mode: {WORKER_MODE}')
         except Exception as error:
             print(f'Worker: job {job_id} failed with error: {error}')
             try:
@@ -104,4 +142,4 @@ def main(account_id: Optional[str] = None) -> None:
 
 if __name__ == '__main__':
     args = parse_args()
-    main(args.account_id)
+    main(args.account_id, args.dry_run)

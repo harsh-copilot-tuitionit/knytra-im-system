@@ -21,6 +21,13 @@ The worker will later poll queued leads and process outreach jobs in the backgro
 WORKER_SECRET=<worker-secret> APP_BASE_URL=http://localhost:3000 python worker/main.py
 ```
 
+### Worker modes
+
+The worker supports two modes:
+
+- `WORKER_MODE=dummy` — the existing dummy worker behavior.
+- `WORKER_MODE=instagram` — opens a browser, navigates to Instagram, and prepares for future automation without sending real messages.
+
 ### Account-scoped worker
 
 To poll jobs for a specific outreach account:
@@ -34,3 +41,20 @@ Or use the environment variable:
 ```bash
 WORKER_SECRET=<worker-secret> APP_BASE_URL=http://localhost:3000 WORKER_ACCOUNT_ID=<accountId> python worker/main.py
 ```
+
+### Instagram mode
+
+Install Python and Playwright dependencies:
+
+```bash
+pip install -r worker/requirements.txt
+python -m playwright install chromium
+```
+
+Run Instagram mode:
+
+```bash
+WORKER_MODE=instagram INSTAGRAM_HEADLESS=false WORKER_SECRET=<worker-secret> APP_BASE_URL=http://localhost:3000 python worker/main.py --account-id <accountId>
+```
+
+In Instagram mode, the worker will open a browser and navigate to Instagram, but it will not send any direct messages yet.
