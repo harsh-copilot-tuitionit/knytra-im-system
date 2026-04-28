@@ -8,8 +8,16 @@ export async function GET(request: Request) {
   if (authError) return authError;
   if (!prisma) return dbUnavailableResponse();
 
+  const url = new URL(request.url);
+  const accountId = url.searchParams.get('accountId') ?? undefined;
+  const where: { status: 'queued'; accountId?: string } = { status: 'queued' };
+
+  if (accountId) {
+    where.accountId = accountId;
+  }
+
   const job = await prisma.outreachJob.findFirst({
-    where: { status: 'queued' },
+    where,
     orderBy: { createdAt: 'asc' },
     include: {
       lead: true,

@@ -20,3 +20,17 @@ The worker will later poll queued leads and process outreach jobs in the backgro
 ```bash
 WORKER_SECRET=<worker-secret> APP_BASE_URL=http://localhost:3000 python worker/main.py
 ```
+
+### Account-scoped worker
+
+To poll jobs for a specific outreach account:
+
+```bash
+WORKER_SECRET=<worker-secret> APP_BASE_URL=http://localhost:3000 python worker/main.py --account-id <accountId>
+```
+
+Or use the environment variable:
+
+```bash
+WORKER_SECRET=<worker-secret> APP_BASE_URL=http://localhost:3000 WORKER_ACCOUNT_ID=<accountId> python worker/main.py
+```

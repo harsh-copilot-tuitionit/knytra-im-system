@@ -1,5 +1,8 @@
+import argparse
 import os
 import time
+from typing import Optional
+
 import requests
 from dotenv import load_dotenv
 
@@ -7,6 +10,7 @@ load_dotenv()
 
 APP_BASE_URL = os.getenv('APP_BASE_URL', 'http://localhost:3000').rstrip('/')
 WORKER_SECRET = os.getenv('WORKER_SECRET')
+WORKER_ACCOUNT_ID = os.getenv('WORKER_ACCOUNT_ID')
 
 if not WORKER_SECRET:
     raise SystemExit('Missing WORKER_SECRET environment variable')
@@ -17,9 +21,13 @@ HEADERS = {
 }
 
 
-def get_next_job():
+def get_next_job(account_id: Optional[str] = None):
     url = f'{APP_BASE_URL}/api/worker/jobs/next'
-    response = requests.get(url, headers=HEADERS, timeout=30)
+    params = {}
+    if account_id:
+        params['accountId'] = account_id
+
+    response = requests.get(url, headers=HEADERS, params=params, timeout=30)
     if response.status_code != 200:
         print(f'Worker: failed to fetch next job ({response.status_code}): {response.text}')
         return None
@@ -53,13 +61,21 @@ def fail_job(job_id: str, message: str):
     return response.json()
 
 
-def main() -> None:
+def parse_args():
+    parser = argparse.ArgumentParser(description='Knytra IM worker')
+    parser.add_argument('--account-id', dest='account_id', default=WORKER_ACCOUNT_ID)
+    return parser.parse_args()
+
+
+def main(account_id: Optional[str] = None) -> None:
     print('Knytra IM worker started')
     print(f'Using app base URL: {APP_BASE_URL}')
+    if account_id:
+        print(f'Polling jobs for account: {account_id}')
 
     while True:
         print('Worker: checking for queued outreach jobs...')
-        job = get_next_job()
+        job = get_next_job(account_id)
         if not job:
             print('Worker: no queued jobs found')
             time.sleep(10)
@@ -85,4 +101,5 @@ def main() -> None:
 
 
 if __name__ == '__main__':
-    main()
+    args = parse_args()
+    main(args.account_id)
