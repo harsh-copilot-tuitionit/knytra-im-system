@@ -10,7 +10,7 @@ The application allows interns to submit Instagram lead records and enables admi
 
 - **Next.js app** for the frontend and backend API routes
 - **TypeScript** for type safety
-- **Prisma + SQLite** for local-first persistence
+- **Prisma + PostgreSQL** for persistence
 - **React** client-side app experience
 - **Python worker scaffold** for future automation
 
@@ -32,7 +32,9 @@ The application allows interns to submit Instagram lead records and enables admi
 cp .env.example .env
 ```
 
-2. Install dependencies:
+2. Update `.env` with your Neon Postgres `DATABASE_URL` and a strong `WORKER_SECRET`.
+
+3. Install dependencies:
 
 ```bash
 npm install
@@ -64,17 +66,17 @@ npm run dev
 
 ## Database Setup
 
-- SQLite is used for local development with `DATABASE_URL="file:./dev.db"`.
+- PostgreSQL is used for both local development and production in this repo.
+- Neon is the hosted PostgreSQL provider for production.
 - Prisma schema is located in `prisma/schema.prisma`.
 - Seed data creates an admin user, intern user, and five outreach accounts.
 
 ## Firebase Production Deployment
 
-- SQLite is only intended for local development.
-- Firebase App Hosting production requires an external hosted database such as Supabase or Neon.
+- Production uses a hosted PostgreSQL database such as Neon.
 - `DATABASE_URL` must be configured in Firebase App Hosting environment variables.
 - `WORKER_SECRET` should also be set in production instead of using the local default.
-- The app can build locally with SQLite fallback, but production Firebase deployment needs a production-compatible database provider and connection string.
+- Do not commit real database credentials to source control.
 
 ## API Routes
 
