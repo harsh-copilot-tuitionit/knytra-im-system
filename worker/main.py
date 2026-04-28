@@ -111,11 +111,7 @@ def run_instagram_job(job_id: str, account_id: str, instagram_username: Optional
         playwright, context, page = start_browser(account_id)
         open_instagram(page)
         print(f'Worker: Instagram mode opened browser for job {job_id}')
-        if is_logged_in(page):
-            print('Instagram session ready.')
-        else:
-            wait_for_login(page)
-            print('Instagram session ready.')
+        wait_for_login(page, config.INSTAGRAM_LOGIN_TIMEOUT_SECONDS)
 
         open_profile(page, instagram_username)
         print(f'Opened Instagram profile @{instagram_username.lstrip("@")}')

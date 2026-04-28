@@ -50,30 +50,68 @@ def is_logged_in(page: Page) -> bool:
             return True
         if page.locator('img[alt*="profile picture"]').count() > 0:
             return True
+        if page.locator('nav').count() > 0 and page.locator('a[href="/explore/"]').count() > 0:
+            return True
     except Exception:
         pass
 
-    return 'login' not in url
+    if page.locator('input[name="username"]').count() > 0:
+        return False
+    if page.locator('input[name="password"]').count() > 0:
+        return False
+    if page.locator('text="Log in"').count() > 0:
+        return False
+
+    return 'accounts/login' not in url and 'challenge' not in url
 
 
-def wait_for_login(page: Page) -> None:
+def is_login_page(page: Page) -> bool:
+    url = page.url
+    if 'accounts/login' in url or 'accounts/password' in url or 'challenge' in url:
+        return True
+
+    try:
+        if page.locator('input[name="username"]').count() > 0:
+            return True
+        if page.locator('input[name="password"]').count() > 0:
+            return True
+        if page.locator('text="Log in"').count() > 0:
+            return True
+    except Exception:
+        pass
+
+    return False
+
+
+def wait_for_login(page: Page, timeout_seconds: int = 300) -> bool:
     print('Instagram client: checking login state')
     if is_logged_in(page):
-        print('Instagram client: already logged in')
-        return
+        print('Instagram session ready.')
+        return True
 
     print('Instagram client: please log in manually in the opened browser.')
+    print(f'Waiting up to {timeout_seconds} seconds for login...')
+
+    start_time = time.time()
     while True:
-        time.sleep(5)
+        elapsed = time.time() - start_time
+        if elapsed >= timeout_seconds:
+            raise RuntimeError('Instagram login was not completed within 5 minutes')
+
+        time.sleep(3)
         try:
             page.reload(timeout=30000)
             page.wait_for_load_state('networkidle')
             if is_logged_in(page):
-                print('Instagram client: login detected')
-                return
+                print('Login detected. Session saved.')
+                return True
+            if is_login_page(page):
+                print('Still waiting for manual login...')
+            else:
+                print('Still waiting for manual login; login form not visible yet')
         except Exception as error:
             print(f'Instagram client: login check error: {error}')
-            time.sleep(2)
+            time.sleep(1)
 
 
 def open_profile(page: Page, username: str) -> None:

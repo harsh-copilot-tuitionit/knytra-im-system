@@ -14,4 +14,5 @@ MESSAGE_TEMPLATE = os.getenv(
     'MESSAGE_TEMPLATE',
     'Hey @{username}, we loved your content and wanted to explore a collaboration with Knytra.',
 )
+INSTAGRAM_LOGIN_TIMEOUT_SECONDS = int(os.getenv('INSTAGRAM_LOGIN_TIMEOUT_SECONDS', '300'))
 WORKER_DRY_RUN = os.getenv('WORKER_DRY_RUN', 'false').lower() == 'true'

@@ -78,5 +78,6 @@ WORKER_MODE=instagram INSTAGRAM_HEADLESS=false WORKER_SECRET=<worker-secret> APP
 ```
 
 After logging in manually, the worker will detect the session and keep it ready for future jobs.
+It will wait up to 5 minutes for manual login before timing out.
 
 For next runs, the same session folder will be reused so you do not need to log in again.
