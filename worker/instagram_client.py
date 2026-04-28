@@ -99,6 +99,49 @@ def open_profile(page: Page, username: str) -> None:
     print(f'Instagram client: profile page opened for @{clean_username} (could not verify exact profile elements)')
 
 
+def open_message_dialog(page: Page) -> None:
+    print('Instagram client: attempting to open message dialog')
+    message_button = None
+
+    for selector in ['text="Message"', 'text="Send message"']:
+        button = page.locator(selector)
+        if button.count() > 0:
+            message_button = button.first()
+            break
+
+    if not message_button:
+        raise RuntimeError('Message button not available')
+
+    message_button.click()
+    page.wait_for_load_state('networkidle')
+    print('Instagram client: message dialog opened')
+
+    if not (
+        page.locator('textarea').count() > 0
+        or page.locator('div[contenteditable="true"]').count() > 0
+    ):
+        raise RuntimeError('DM input not found')
+
+
+def type_message_draft(page: Page, message: str) -> None:
+    print('Instagram client: typing draft message')
+    textbox = None
+    if page.locator('textarea').count() > 0:
+        textbox = page.locator('textarea').first()
+    elif page.locator('div[contenteditable="true"]').count() > 0:
+        textbox = page.locator('div[contenteditable="true"]').first()
+
+    if not textbox:
+        raise RuntimeError('DM input not found')
+
+    try:
+        textbox.fill(message)
+    except Exception:
+        textbox.type(message)
+
+    print('Instagram client: draft message typed')
+
+
 def close_browser(playwright: Any, context: BrowserContext) -> None:
     try:
         context.close()

@@ -5,7 +5,16 @@ from typing import Any, Optional
 import requests
 
 import config
-from instagram_client import close_browser, is_logged_in, open_instagram, open_profile, start_browser, wait_for_login
+from instagram_client import (
+    close_browser,
+    is_logged_in,
+    open_instagram,
+    open_message_dialog,
+    open_profile,
+    start_browser,
+    type_message_draft,
+    wait_for_login,
+)
 
 APP_BASE_URL = config.APP_BASE_URL
 WORKER_SECRET = config.WORKER_SECRET
@@ -86,6 +95,8 @@ def run_instagram_job(job_id: str, account_id: str, instagram_username: Optional
     if not instagram_username:
         raise RuntimeError('Instagram mode requires a lead instagramUsername')
 
+    message = config.MESSAGE_TEMPLATE.replace('@{username}', f'@{instagram_username.lstrip("@")}').replace('{username}', instagram_username.lstrip('@'))
+
     print('Worker mode: instagram')
     print(f'Worker: selected account id {account_id}')
     print(f'Worker: opening influencer profile @{instagram_username.lstrip("@")}')
@@ -110,11 +121,14 @@ def run_instagram_job(job_id: str, account_id: str, instagram_username: Optional
         print(f'Opened Instagram profile @{instagram_username.lstrip("@")}')
 
         if dry_run:
-            print('Worker: instagram dry-run mode enabled; marking job completed without sending messages')
-            complete_data = complete_job(job_id)
-            print(f'Worker: job {job_id} completed with data: {complete_data}')
-        else:
-            raise RuntimeError('Instagram profile opened; message sending not enabled yet')
+            print(f'Would send: {message}')
+            raise RuntimeError('Dry run mode; draft message not sent')
+
+        open_message_dialog(page)
+        print('Opened message dialog')
+        type_message_draft(page, message)
+        print('Typed draft message')
+        raise RuntimeError('Draft message typed; manual send required')
     finally:
         if playwright is not None and context is not None:
             close_browser(playwright, context)

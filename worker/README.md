@@ -58,7 +58,13 @@ WORKER_MODE=instagram INSTAGRAM_HEADLESS=false WORKER_SECRET=<worker-secret> APP
 ```
 
 In Instagram mode, the worker will open a browser, load Instagram, and open the influencer profile for the queued job.
-It will not send any direct messages yet.
+It will also open the direct message dialog and type a draft message, but it will not send the message.
+
+Use `MESSAGE_TEMPLATE` to customize the draft:
+
+```bash
+MESSAGE_TEMPLATE="Hey @{username}, we loved your content and wanted to explore a collaboration with Knytra."
+```
 
 ### Instagram login session storage
 
