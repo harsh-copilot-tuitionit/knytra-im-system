@@ -58,3 +58,18 @@ WORKER_MODE=instagram INSTAGRAM_HEADLESS=false WORKER_SECRET=<worker-secret> APP
 ```
 
 In Instagram mode, the worker will open a browser and navigate to Instagram, but it will not send any direct messages yet.
+
+### Instagram login session storage
+
+The first time you run Instagram mode for an account, the worker will open a browser and allow you to log in manually.
+The session is saved to `worker/sessions/<accountId>/` and reused on future runs.
+
+Example first-time login:
+
+```bash
+WORKER_MODE=instagram INSTAGRAM_HEADLESS=false WORKER_SECRET=<worker-secret> APP_BASE_URL=http://localhost:3000 python worker/main.py --account-id <accountId>
+```
+
+After logging in manually, the worker will detect the session and keep it ready for future jobs.
+
+For next runs, the same session folder will be reused so you do not need to log in again.
